@@ -481,8 +481,8 @@
 
     function openModal() {
       document.getElementById('newThemeName').value = '';
-      document.getElementById('newThemeWords').value = '';
       document.getElementById('modalOverlay').classList.remove('hidden');
+      setTimeout(function(){ document.getElementById('newThemeName').focus(); }, 100);
     }
 
     function closeModal() {
