@@ -303,44 +303,6 @@
     }
     .dim { opacity: 0.35; }
 
-    .examples-label {
-      font-size: 11px; color: var(--text-hint);
-      letter-spacing: 2px; margin-bottom: 10px;
-    }
-    .examples-list { display: flex; flex-direction: column; gap: 9px; }
-    .ex-row {
-      display: flex; align-items: center; gap: 12px;
-      padding: 11px 14px; border-radius: 12px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid var(--card-border);
-    }
-    .ex-zhuyin {
-      font-size: 22px; font-weight: 700;
-      color: #90caff; width: 28px; flex-shrink: 0;
-    }
-    .ex-body { flex: 1; }
-    .ex-answer {
-      font-size: 15px; color: var(--text);
-      transition: all 0.25s; font-weight: 500;
-    }
-    .ex-answer.hidden {
-      background: rgba(255,255,255,0.1);
-      color: transparent; border-radius: 5px;
-      cursor: pointer; user-select: none;
-      min-width: 70px; display: inline-block;
-    }
-    .ex-hint { font-size: 12px; color: var(--text-dim); margin-top: 3px; }
-    .reveal-btn {
-      font-size: 11px; padding: 4px 11px;
-      border-radius: 8px;
-      border: 1px solid var(--card-border);
-      background: none; cursor: pointer;
-      color: var(--text-dim);
-      font-family: 'Noto Serif TC', serif;
-      transition: all 0.18s; white-space: nowrap;
-    }
-    .reveal-btn:hover { background: rgba(255,255,255,0.08); color: var(--text); }
-
     .empty-state {
       text-align: center;
       color: var(--text-hint);
@@ -935,7 +897,6 @@
       if (!pool.length) return;
       gameSpinning = true;
       document.getElementById('gameBtn').disabled = true;
-      document.getElementById('revealAllBtn').style.display = 'none';
       document.getElementById('themeDisplay').classList.add('dim');
       document.getElementById('zhuyinDisplay').classList.add('dim');
 
