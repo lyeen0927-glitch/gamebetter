@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>注音抽籤機 — 團康遊戲工具</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold: #f5c842;
+      --gold-dim: rgba(245,200,66,0.6);
+      --gold-bg: rgba(245,200,66,0.12);
+      --gold-border: rgba(245,200,66,0.35);
+      --blue: #64a8e8;
+      --blue-bg: rgba(100,168,232,0.12);
+      --blue-border: rgba(100,168,232,0.4);
+      --green: #4dc9a0;
+      --green-bg: rgba(77,201,160,0.12);
+      --green-border: rgba(77,201,160,0.4);
+      --purple: #a78bfa;
+      --purple-bg: rgba(167,139,250,0.12);
+      --purple-border: rgba(167,139,250,0.4);
+      --bg1: #1a0a2e;
+      --bg2: #16213e;
+      --bg3: #0f3460;
+      --card-bg: rgba(255,255,255,0.04);
+      --card-border: rgba(255,255,255,0.1);
+      --text: #f0f0f0;
+      --text-dim: rgba(240,240,240,0.5);
+      --text-hint: rgba(240,240,240,0.28);
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, var(--bg1) 0%, var(--bg2) 50%, var(--bg3) 100%);
+      font-family: 'Noto Serif TC', serif;
+      color: var(--text);
+      padding: 0 0 60px;
+    }
+
+    /* ── Header ── */
+    .header {
+      text-align: center;
+      padding: 36px 20px 24px;
+    }
+    .header-sub {
+      font-size: 12px;
+      letter-spacing: 6px;
+      color: var(--gold);
+      opacity: 0.7;
+      margin-bottom: 8px;
+    }
+    .header h1 {
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      color: #fff;
+    }
+    .header-line {
+      width: 56px; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      margin: 12px auto 0;
+    }
+
+    /* ── Tabs ── */
+    .tabs-bar {
+      display: flex;
+      max-width: 600px;
+      margin: 0 auto 24px;
+      border-bottom: 1px solid var(--card-border);
+      padding: 0 20px;
+    }
+    .tab-btn {
+      flex: 1; padding: 14px 0;
+      font-size: 15px; font-weight: 500;
+      background: none; border: none; cursor: pointer;
+      color: var(--text-dim);
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      font-family: 'Noto Serif TC', serif;
+      letter-spacing: 2px;
+    }
+    .tab-btn.active {
+      color: var(--gold);
+      border-bottom: 2px solid var(--gold);
+    }
+    .tab-btn:hover:not(.active) { color: var(--text); }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── Container ── */
+    .container {
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 28px 24px;
+      backdrop-filter: blur(10px);
+      margin-bottom: 16px;
+    }
+
+    /* ══════════════════════════════
+       頁籤一：隨機抽籤
+    ══════════════════════════════ */
+    .pool-label {
+      font-size: 11px;
+      color: var(--text-hint);
+      letter-spacing: 4px;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .pool-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .pc {
+      width: 34px; height: 34px;
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 500;
+      border: 1px solid;
+      transition: all 0.2s;
+      cursor: default;
+    }
+    .pc.sm {
+      color: #7ec8f0;
+      background: rgba(126,200,240,0.1);
+      border-color: rgba(126,200,240,0.25);
+    }
+    .pc.ji {
+      color: #7be8b8;
+      background: rgba(123,232,184,0.1);
+      border-color: rgba(123,232,184,0.25);
+    }
+    .pc.hl {
+      transform: scale(1.22);
+      box-shadow: 0 0 0 2px rgba(245,200,66,0.6);
+      z-index: 1;
+    }
+
+    .legend {
+      display: flex;
+      gap: 18px;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+    .legend-item {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--text-dim);
+    }
+    .legend-dot { width: 9px; height: 9px; border-radius: 50%; }
+    .legend-dot.s { background: #7ec8f0; }
+    .legend-dot.i { background: #7be8b8; }
+
+    .pair {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    .char-box {
+      width: 110px; height: 110px;
+      border-radius: 18px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 6px; border: 1px solid;
+      transition: all 0.15s;
+    }
+    .char-box.sm-box {
+      background: rgba(126,200,240,0.1);
+      border-color: rgba(126,200,240,0.4);
+      box-shadow: 0 0 20px rgba(126,200,240,0.08);
+    }
+    .char-box.ji-box {
+      background: rgba(123,232,184,0.1);
+      border-color: rgba(123,232,184,0.4);
+      box-shadow: 0 0 20px rgba(123,232,184,0.08);
+    }
+    .char-box.spinning {
+      background: rgba(255,255,255,0.03) !important;
+      border-color: rgba(255,255,255,0.1) !important;
+      box-shadow: none !important;
+    }
+    .char-main { font-size: 52px; line-height: 1; font-weight: 700; }
+    .char-box.sm-box .char-main { color: #7ec8f0; }
+    .char-box.ji-box .char-main { color: #7be8b8; }
+    .char-box.spinning .char-main { color: var(--text-hint) !important; }
+    .char-tag {
+      font-size: 11px; padding: 2px 10px; border-radius: 8px;
+    }
+    .char-box.sm-box .char-tag { color: #7ec8f0; background: rgba(126,200,240,0.15); }
+    .char-box.ji-box .char-tag { color: #7be8b8; background: rgba(123,232,184,0.15); }
+    .char-box.spinning .char-tag { color: transparent !important; background: transparent !important; }
+
+    @keyframes pop {
+      0%   { transform: scale(0.8); }
+      55%  { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    .pop { animation: pop 0.32s cubic-bezier(.36,.07,.19,.97); }
+
+    .hint-text {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-hint);
+      letter-spacing: 2px;
+      margin-bottom: 20px;
+    }
+
+    .history-section { margin-top: 20px; text-align: center; }
+    .history-label {
+      font-size: 11px; color: var(--text-hint);
+      letter-spacing: 4px; margin-bottom: 10px;
+    }
+    .history-chips {
+      display: flex; gap: 8px;
+      flex-wrap: wrap; justify-content: center;
+    }
+    .hist-chip {
+      font-size: 16px; letter-spacing: 4px;
+      padding: 4px 14px; border-radius: 10px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text-dim);
+    }
+
+    /* ══════════════════════════════
+       頁籤二：主題遊戲
+    ══════════════════════════════ */
+    .section-label {
+      font-size: 11px; color: var(--text-hint);
+      letter-spacing: 3px; margin-bottom: 10px;
+    }
+    .theme-chips-wrap {
+      display: flex; flex-wrap: wrap; gap: 7px;
+      margin-bottom: 20px;
+    }
+    .theme-chip {
+      padding: 6px 13px; border-radius: 20px;
+      font-size: 12px; cursor: pointer;
+      border: 1px solid var(--card-border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text-dim);
+      font-family: 'Noto Serif TC', serif;
+      transition: all 0.18s;
+      letter-spacing: 0.5px;
+    }
+    .theme-chip.on {
+      background: var(--purple-bg);
+      border-color: var(--purple-border);
+      color: var(--purple);
+    }
+    .theme-chip:hover { color: var(--text); }
+
+    .game-top {
+      display: flex; gap: 14px;
+      margin-bottom: 20px;
+    }
+    .theme-display {
+      flex: 1;
+      background: var(--purple-bg);
+      border: 1px solid var(--purple-border);
+      border-radius: 14px; padding: 16px 14px;
+      text-align: center; transition: opacity 0.2s;
+    }
+    .theme-display-label {
+      font-size: 11px; color: var(--purple);
+      letter-spacing: 3px; margin-bottom: 8px; opacity: 0.8;
+    }
+    .theme-display-val {
+      font-size: 21px; font-weight: 700;
+      color: #d4bbff; letter-spacing: 1px;
+    }
+    .zhuyin-display {
+      width: 100px;
+      background: var(--blue-bg);
+      border: 1px solid var(--blue-border);
+      border-radius: 14px; padding: 14px 10px;
+      text-align: center; transition: opacity 0.2s;
+    }
+    .zhuyin-display-label {
+      font-size: 11px; color: var(--blue);
+      letter-spacing: 3px; margin-bottom: 4px; opacity: 0.8;
+    }
+    .zhuyin-display-val {
+      font-size: 42px; font-weight: 700;
+      color: #90caff; line-height: 1.1;
+    }
+    .zhuyin-display-tag {
+      font-size: 11px; color: var(--blue); margin-top: 3px; opacity: 0.7;
+    }
+    .dim { opacity: 0.35; }
+
+    .examples-label {
+      font-size: 11px; color: var(--text-hint);
+      letter-spacing: 2px; margin-bottom: 10px;
+    }
+    .examples-list { display: flex; flex-direction: column; gap: 9px; }
+    .ex-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 14px; border-radius: 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--card-border);
+    }
+    .ex-zhuyin {
+      font-size: 22px; font-weight: 700;
+      color: #90caff; width: 28px; flex-shrink: 0;
+    }
+    .ex-body { flex: 1; }
+    .ex-answer {
+      font-size: 15px; color: var(--text);
+      transition: all 0.25s; font-weight: 500;
+    }
+    .ex-answer.hidden {
+      background: rgba(255,255,255,0.1);
+      color: transparent; border-radius: 5px;
+      cursor: pointer; user-select: none;
+      min-width: 70px; display: inline-block;
+    }
+    .ex-hint { font-size: 12px; color: var(--text-dim); margin-top: 3px; }
+    .reveal-btn {
+      font-size: 11px; padding: 4px 11px;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      background: none; cursor: pointer;
+      color: var(--text-dim);
+      font-family: 'Noto Serif TC', serif;
+      transition: all 0.18s; white-space: nowrap;
+    }
+    .reveal-btn:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+
+    .empty-state {
+      text-align: center;
+      color: var(--text-hint);
+      font-size: 13px;
+      padding: 28px 0;
+      letter-spacing: 1px;
+    }
+
+    /* ── Buttons ── */
+    .btn-row {
+      display: flex; gap: 10px; justify-content: center;
+      margin-top: 4px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--gold), #e8a500);
+      border: none; border-radius: 50px;
+      padding: 13px 44px; font-size: 17px; font-weight: 700;
+      color: #1a0a2e; cursor: pointer;
+      letter-spacing: 4px;
+      font-family: 'Noto Serif TC', serif;
+      box-shadow: 0 4px 20px rgba(245,200,66,0.3);
+      transition: all 0.2s;
+    }
+    .btn-primary:hover:not(:disabled) {
+      transform: scale(1.04);
+      box-shadow: 0 6px 28px rgba(245,200,66,0.45);
+    }
+    .btn-primary:disabled {
+      background: rgba(245,200,66,0.25);
+      color: rgba(255,255,255,0.35);
+      cursor: not-allowed; transform: none; box-shadow: none;
+    }
+    .btn-secondary {
+      background: rgba(126,200,240,0.1);
+      border: 1px solid rgba(126,200,240,0.35);
+      border-radius: 50px;
+      padding: 13px 24px; font-size: 14px;
+      color: #7ec8f0; cursor: pointer;
+      font-family: 'Noto Serif TC', serif;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover { background: rgba(126,200,240,0.2); }
+
+    /* ── Decorative circles ── */
+    .deco {
+      position: fixed; border-radius: 50%;
+      pointer-events: none; z-index: 0;
+    }
+    .deco1 { top: -80px; left: -80px; width: 280px; height: 280px; border: 1.5px solid rgba(255,200,50,0.07); }
+    .deco2 { bottom: -60px; right: -60px; width: 220px; height: 220px; border: 1.5px solid rgba(255,200,50,0.1); }
+    .deco3 { top: 35%; right: -5%; width: 130px; height: 130px; border: 1px solid rgba(255,200,50,0.05); }
+
+    /* ── Responsive ── */
+    @media (max-width: 420px) {
+      .header h1 { font-size: 24px; }
+      .char-box { width: 96px; height: 96px; }
+      .char-main { font-size: 44px; }
+      .theme-display-val { font-size: 17px; }
+      .zhuyin-display { width: 86px; }
+      .zhuyin-display-val { font-size: 36px; }
+      .card { padding: 20px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="deco deco1"></div>
+  <div class="deco deco2"></div>
+  <div class="deco deco3"></div>
+
+  <div class="header">
+    <div class="header-sub">團康遊戲工具</div>
+    <h1>注音抽籤機</h1>
+    <div class="header-line"></div>
+  </div>
+
+  <div class="tabs-bar">
+    <button class="tab-btn active" onclick="switchTab('draw')">隨機抽籤</button>
+    <button class="tab-btn" onclick="switchTab('game')">主題遊戲</button>
+  </div>
+
+  <!-- ════════ 頁籤一：隨機抽籤 ════════ -->
+  <div id="tab-draw" class="tab-content active">
+    <div class="container">
+      <div class="card">
+        <div class="pool-label">抽取池（聲母 21 + 介音 3，共 24 個）</div>
+        <div class="pool-grid" id="poolGrid"></div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot s"></div>聲母（21）</div>
+          <div class="legend-item"><div class="legend-dot i"></div>介音（3）</div>
+        </div>
+
+        <div class="pair">
+          <div class="char-box sm-box" id="dbox1">
+            <div class="char-main" id="dchar1">ㄅ</div>
+            <div class="char-tag" id="dtag1">聲母</div>
+          </div>
+          <div class="char-box sm-box" id="dbox2">
+            <div class="char-main" id="dchar2">ㄆ</div>
+            <div class="char-tag" id="dtag2">聲母</div>
+          </div>
+        </div>
+
+        <div class="hint-text" id="dhint">點擊按鈕抽取注音字首</div>
+        <div class="btn-row">
+          <button class="btn-primary" id="drawBtn" onclick="doDraw()">🎲 抽　籤</button>
+        </div>
+      </div>
+
+      <div id="drawHistorySection" style="display:none">
+        <div class="card">
+          <div class="history-label">歷史紀錄</div>
+          <div class="history-chips" id="drawHistory"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ 頁籤二：主題遊戲 ════════ -->
+  <div id="tab-game" class="tab-content">
+    <div class="container">
+
+      <div class="card">
+        <div class="section-label">選擇主題範圍（可多選）</div>
+        <div class="theme-chips-wrap" id="themeChips"></div>
+      </div>
+
+      <div class="card">
+        <div class="game-top">
+          <div class="theme-display dim" id="themeDisplay">
+            <div class="theme-display-label">主　題</div>
+            <div class="theme-display-val" id="themeVal">—</div>
+          </div>
+          <div class="zhuyin-display dim" id="zhuyinDisplay">
+            <div class="zhuyin-display-label">字　首</div>
+            <div class="zhuyin-display-val" id="zhuyinVal">—</div>
+            <div class="zhuyin-display-tag" id="zhuyinTag"></div>
+          </div>
+        </div>
+
+        <div class="examples-label">範例提示（點答案欄揭曉）</div>
+        <div class="examples-list" id="examplesGrid">
+          <div class="empty-state">選好主題後點「出題」開始遊戲</div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-primary" id="gameBtn" onclick="doGame()">🎯 出　題</button>
+        <button class="btn-secondary" id="revealAllBtn" onclick="revealAll()" style="display:none">全部揭曉</button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    /* ════════════════════════════════
+       注音符號池（聲母21 + 介音3）
+    ════════════════════════════════ */
+    const POOL = [
+      {c:'ㄅ',t:'聲母',k:'sm'},{c:'ㄆ',t:'聲母',k:'sm'},{c:'ㄇ',t:'聲母',k:'sm'},{c:'ㄈ',t:'聲母',k:'sm'},
+      {c:'ㄉ',t:'聲母',k:'sm'},{c:'ㄊ',t:'聲母',k:'sm'},{c:'ㄋ',t:'聲母',k:'sm'},{c:'ㄌ',t:'聲母',k:'sm'},
+      {c:'ㄍ',t:'聲母',k:'sm'},{c:'ㄎ',t:'聲母',k:'sm'},{c:'ㄏ',t:'聲母',k:'sm'},
+      {c:'ㄐ',t:'聲母',k:'sm'},{c:'ㄑ',t:'聲母',k:'sm'},{c:'ㄒ',t:'聲母',k:'sm'},
+      {c:'ㄓ',t:'聲母',k:'sm'},{c:'ㄔ',t:'聲母',k:'sm'},{c:'ㄕ',t:'聲母',k:'sm'},{c:'ㄖ',t:'聲母',k:'sm'},
+      {c:'ㄗ',t:'聲母',k:'sm'},{c:'ㄘ',t:'聲母',k:'sm'},{c:'ㄙ',t:'聲母',k:'sm'},
+      {c:'ㄧ',t:'介音',k:'ji'},{c:'ㄨ',t:'介音',k:'ji'},{c:'ㄩ',t:'介音',k:'ji'}
+    ];
+
+    /* ════════════════════════════════
+       主題資料庫
+    ════════════════════════════════ */
+    const THEMES = {
+      '便利超商': { icon:'🏪', data:{
+        'ㄅ':['便當(熱食第一名)','包子(關東煮常見)'],
+        'ㄆ':['泡麵(泡麵區必備)','啤酒(飲料冰箱)'],
+        'ㄇ':['麻糬(甜點零食)','牛奶(鮮乳冷藏)'],
+        'ㄈ':['飯糰(早餐熱銷)','鳳梨酥(伴手禮)'],
+        'ㄉ':['豆漿(早餐飲品)','丹麥麵包(烘焙區)'],
+        'ㄊ':['茶葉蛋(關東煮第一名)','土司(麵包主食)'],
+        'ㄋ':['奶茶(飲料暢銷)','牛肉麵(冷藏熱食)'],
+        'ㄌ':['拿鐵(咖啡機熱飲)','涼麵(夏季熱賣)'],
+        'ㄍ':['關東煮(冬天必吃)','果凍(甜點零食)'],
+        'ㄎ':['咖啡(自助咖啡機)','可樂(飲料冰箱)'],
+        'ㄏ':['花生糖(零食區)','紅豆麵包(烘焙)'],
+        'ㄐ':['雞排(炸物熱食)','捲壽司(御飯糰類)'],
+        'ㄑ':['巧克力(糖果零食)','汽水(飲料冰箱)'],
+        'ㄒ':['仙貝(餅乾零食)','香腸(關東煮)'],
+        'ㄓ':['炸雞(熱食區)','珍珠奶茶(飲料機)'],
+        'ㄔ':['橙汁(果汁飲料)','草莓蛋糕(蛋糕區)'],
+        'ㄕ':['薯條(炸物熱食)','沙拉(輕食冷藏)'],
+        'ㄖ':['肉鬆飯糰(早餐熱賣)','熱狗(關東煮)'],
+        'ㄗ':['紫米飯糰(健康餐點)','租借雨傘(便民服務)'],
+        'ㄘ':['蔥花麵包(烘焙熱賣)','草莓牛奶(鮮乳)'],
+        'ㄙ':['沙拉(輕食)','酸梅湯(飲料區)'],
+        'ㄧ':['飲料(最大宗商品)','義大利麵(冷藏)'],
+        'ㄨ':['烏龍茶(茶飲暢銷)','午餐肉(罐頭食品)'],
+        'ㄩ':['魚板(關東煮料)','玉米(關東煮蔬菜)']
+      }},
+      '食物': { icon:'🍜', data:{
+        'ㄅ':['白飯(主食基本款)','冰淇淋(甜點代表)'],
+        'ㄆ':['排骨(台式家常料理)','披薩(義式速食)'],
+        'ㄇ':['麻婆豆腐(川菜名菜)','麵包(西式主食)'],
+        'ㄈ':['火鍋(冬天必吃)','法國麵包(西式主食)'],
+        'ㄉ':['豆腐(萬用食材)','蛋糕(甜點主角)'],
+        'ㄊ':['湯圓(元宵節食品)','甜甜圈(西式甜點)'],
+        'ㄋ':['牛排(西式主菜)','奶酪(甜點)'],
+        'ㄌ':['滷肉飯(台灣名菜)','拉麵(日式料理)'],
+        'ㄍ':['鍋貼(中式點心)','咖哩飯(異國料理)'],
+        'ㄎ':['可樂餅(日式炸物)','烤鴨(北京名菜)'],
+        'ㄏ':['紅燒肉(家常料理)','漢堡(美式速食)'],
+        'ㄐ':['雞腿飯(便當首選)','餃子(北方麵食)'],
+        'ㄑ':['巧克力蛋糕(甜點)','清蒸魚(健康料理)'],
+        'ㄒ':['小籠包(台灣小吃)','西瓜汁(夏日飲品)'],
+        'ㄓ':['炸醬麵(北京名菜)','珍珠奶茶(台灣飲品)'],
+        'ㄔ':['炒飯(中式快炒)','臭豆腐(夜市名物)'],
+        'ㄕ':['壽司(日式料理)','薯餅(早餐小食)'],
+        'ㄖ':['肉圓(台灣小吃)','日式咖哩(異國料理)'],
+        'ㄗ':['粽子(端午節食品)','炸物(夜市必吃)'],
+        'ㄘ':['蔥油餅(台式早點)','炒青菜(家常料理)'],
+        'ㄙ':['珊瑚草(涼拌)','酸辣湯(中式湯品)'],
+        'ㄧ':['義大利麵(西式料理)','飲料(餐桌必備)'],
+        'ㄨ':['烏龍麵(日式麵食)','烤肉(戶外料理)'],
+        'ㄩ':['魚丸(台式小吃)','玉米濃湯(西式湯品)']
+      }},
+      '水果': { icon:'🍎', data:{
+        'ㄅ':['芭樂(台灣番石榴)','波羅蜜(熱帶大型水果)'],
+        'ㄆ':['蘋果(溫帶水果之王)','葡萄(釀酒水果)'],
+        'ㄇ':['芒果(熱帶水果之王)','木瓜(台灣常見)'],
+        'ㄈ':['鳳梨(台灣熱帶水果)','番茄(茄科水果)'],
+        'ㄉ':['榴槤(水果之王)','冬棗(北方甜棗)'],
+        'ㄊ':['甜瓜(夏季水果)','桃子(薔薇科水果)'],
+        'ㄋ':['奇異果(獼猴桃)','檸檬(柑橘類)'],
+        'ㄌ':['荔枝(嶺南名果)','龍眼(新鮮桂圓)'],
+        'ㄍ':['哈密瓜(新疆名瓜)','柑橘(溫帶柑類)'],
+        'ㄎ':['苦瓜(蔬果兩用)','可可果(巧克力來源)'],
+        'ㄏ':['火龍果(仙人掌果)','哈密瓜(新疆甜瓜)'],
+        'ㄐ':['金桔(小型柑橘)','橘子(冬季常見)'],
+        'ㄑ':['柿子(秋季水果)','青棗(台灣特色)'],
+        'ㄒ':['西瓜(夏日消暑)','香蕉(熱帶常見)'],
+        'ㄓ':['柚子(中秋節水果)','珍珠芭樂(改良種)'],
+        'ㄔ':['草莓(紅色漿果)','橙子(甜橙類)'],
+        'ㄕ':['山竹(果后)','釋迦(台東名產)'],
+        'ㄖ':['人參果(傳說仙果)','日本梨(和梨)'],
+        'ㄗ':['棗子(棗椰子類)','紫葡萄(釀酒品種)'],
+        'ㄘ':['草莓(漿果類)','蒼李(台灣李子)'],
+        'ㄙ':['桑葚(黑色漿果)','酸梅(醃製梅子)'],
+        'ㄧ':['楊桃(東南亞星形果)','椰子(熱帶棕櫚果)'],
+        'ㄨ':['烏梅(酸梅一種)','無花果(地中海水果)'],
+        'ㄩ':['柚子(中秋應景)','玉荷包荔枝(屏東名產)']
+      }},
+      '動物': { icon:'🦁', data:{
+        'ㄅ':['豹(非洲草原獵手)','白鯨(北極海洋巨獸)'],
+        'ㄆ':['螃蟹(甲殼類動物)','蝙蝠(唯一會飛的哺乳類)'],
+        'ㄇ':['貓(人類常見寵物)','馬(草原奔跑動物)'],
+        'ㄈ':['蜂(社會性昆蟲)','鳳頭鸚鵡(澳洲鸚鵡)'],
+        'ㄉ':['大象(陸地最大動物)','獨角鯨(北極鯨魚)'],
+        'ㄊ':['老虎(森林之王)','禿鷹(非洲清道夫)'],
+        'ㄋ':['牛(農耕牲畜)','鸚鵡螺(深海頭足類)'],
+        'ㄌ':['獅子(草原之王)','羚羊(非洲奔跑動物)'],
+        'ㄍ':['狗(人類最佳夥伴)','冠鶴(非洲皇冠鳥)'],
+        'ㄎ':['恐龍(史前爬行動物)','枯葉蛙(偽裝高手)'],
+        'ㄏ':['河馬(非洲河流巨獸)','虎鯨(頂級掠食者)'],
+        'ㄐ':['金魚(觀賞魚類)','鯨魚(最大哺乳類)'],
+        'ㄑ':['企鵝(南極游泳鳥)','蜻蜓(水邊昆蟲)'],
+        'ㄒ':['熊貓(中國國寶)','犀牛(非洲大型草食)'],
+        'ㄓ':['蜘蛛(八腳節肢)','珍珠鳥(觀賞鳥)'],
+        'ㄔ':['穿山甲(有鱗哺乳類)','蟾蜍(夜行兩棲類)'],
+        'ㄕ':['蛇(爬行綱動物)','獅子魚(珊瑚礁毒魚)'],
+        'ㄖ':['乳牛(農場牲畜)','熱帶魚(觀賞魚類)'],
+        'ㄗ':['斑馬(非洲條紋馬)','座頭鯨(海洋歌唱者)'],
+        'ㄘ':['蒼鷺(溼地水鳥)','草原犬鼠(土撥鼠)'],
+        'ㄙ':['松鼠(樹上跳躍動物)','水獺(可愛水邊哺乳)'],
+        'ㄧ':['鷹(天空猛禽)','燕子(春天候鳥)'],
+        'ㄨ':['烏龜(長壽爬行類)','烏鴉(智慧鳥類)'],
+        'ㄩ':['魚(水中脊椎動物)','鴛鴦(象徵愛情的鴨科)']
+      }},
+      '成語': { icon:'📜', data:{
+        'ㄅ':['班門弄斧(在行家前賣弄)','冰清玉潔(比喻品格高潔)'],
+        'ㄆ':['拋磚引玉(以拙換巧)','破釜沉舟(下定決心)'],
+        'ㄇ':['馬到成功(順利達成)','名副其實(名稱與實際相符)'],
+        'ㄈ':['風和日麗(天氣晴朗)','鳳毛麟角(極為稀少)'],
+        'ㄉ':['大材小用(人才未善用)','對症下藥(針對問題解決)'],
+        'ㄊ':['天衣無縫(嚴密無破綻)','同甘共苦(共擔苦樂)'],
+        'ㄋ':['南轅北轍(方向相反)','弄巧成拙(聰明反被誤)'],
+        'ㄌ':['老馬識途(有經驗者引路)','濫竽充數(無能者混入)'],
+        'ㄍ':['刮目相看(用新眼光看人)','瓜田李下(容易引嫌疑)'],
+        'ㄎ':['刻舟求劍(思想僵化)','口是心非(言行不一)'],
+        'ㄏ':['畫蛇添足(多此一舉)','狐假虎威(借他人威勢)'],
+        'ㄐ':['金石為開(精誠感動一切)','驚弓之鳥(受驚後疑神疑鬼)'],
+        'ㄑ':['千里之行始於足下(大事從小做)','巧言令色(虛偽討好)'],
+        'ㄒ':['心曠神怡(心情舒暢)','喜出望外(出乎意料的高興)'],
+        'ㄓ':['指鹿為馬(顛倒是非)','朝三暮四(變化無常)'],
+        'ㄔ':['此地無銀三百兩(不打自招)','乘風破浪(奮發前進)'],
+        'ㄕ':['守株待兔(坐等機會)','水滴石穿(持之以恆)'],
+        'ㄖ':['如魚得水(非常適合)','入木三分(見解深刻)'],
+        'ㄗ':['自食其果(自作自受)','坐井觀天(眼界狹窄)'],
+        'ㄘ':['草木皆兵(驚慌失措)','才高八斗(才學出眾)'],
+        'ㄙ':['四面楚歌(陷入孤立)','塞翁失馬(禍福難料)'],
+        'ㄧ':['一石二鳥(一舉兩得)','一毛不拔(極度吝嗇)'],
+        'ㄨ':['亡羊補牢(事後補救)','五花八門(種類繁多)'],
+        'ㄩ':['愚公移山(堅持不懈)','與虎謀皮(與壞人商量損己)']
+      }},
+      '台灣夜市小吃': { icon:'🌙', data:{
+        'ㄅ':['蚵仔煎(海鮮煎蛋夜市必吃)','冰糖葫蘆(甜蜜串燒零食)'],
+        'ㄆ':['排骨酥湯(濃郁湯品)','皮蛋豆腐(涼拌小菜)'],
+        'ㄇ':['麻辣臭豆腐(辣味版臭豆腐)','蒙古烤肉(現烤肉片)'],
+        'ㄈ':['鳳梨酥(台灣伴手禮)','蜂蜜蛋糕(長崎蛋糕)'],
+        'ㄉ':['大腸包小腸(台式熱狗)','豆花(古早味甜點)'],
+        'ㄊ':['筒仔米糕(小份米糕)','糖葫蘆(糖衣串燒)'],
+        'ㄋ':['牛肉麵(台北名菜)','奶油螃蟹(海鮮料理)'],
+        'ㄌ':['滷味(夜市滷製品)','涼圓(清涼甜點)'],
+        'ㄍ':['關東煮(日式煮物)','割包(台灣虎咬豬)'],
+        'ㄎ':['客家麻糬(客家甜點)','烤玉米(炭烤蔬菜)'],
+        'ㄏ':['紅豆餅(車輪餅)','花枝丸(花枝製丸)'],
+        'ㄐ':['雞排(台灣炸雞代表)','薑母鴨(冬令進補)'],
+        'ㄑ':['蚵仔麵線(台式麵線)','青蛙下蛋(仙草飲品)'],
+        'ㄒ':['臭豆腐(發酵豆腐)','杏仁豆腐(清涼甜點)'],
+        'ㄓ':['珍珠奶茶(台灣之光)','炙燒牛肉(現烤肉片)'],
+        'ㄔ':['臭豆腐(炸或滷版)','蔥抓餅(台式千層餅)'],
+        'ㄕ':['沙茶牛肉(沙茶醬炒)','霜淇淋(夜市冰品)'],
+        'ㄖ':['肉圓(彰化名產)','肉羹湯(台式濃湯)'],
+        'ㄗ':['粽子(竹葉包糯米)','滷豬腳(膠原蛋白)'],
+        'ㄘ':['蔥油餅(台式早點)','炒花枝(海鮮快炒)'],
+        'ㄙ':['蒜泥白肉(蒜醬冷肉)','酸辣湯(中式湯品)'],
+        'ㄧ':['鴨血糕(鐵板燒配料)','蚵仔煎(海鮮煎蛋)'],
+        'ㄨ':['烤香腸(炭烤肉腸)','刈包(台灣漢堡)'],
+        'ㄩ':['魚丸湯(台式魚漿丸)','玉米烤肉(炭烤蔬菜)']
+      }},
+      '台灣景點': { icon:'🗺️', data:{
+        'ㄅ':['北投溫泉(台北溫泉勝地)','八里左岸(淡水河對岸)'],
+        'ㄆ':['平溪天燈(北部老街)','鵝鑾鼻(墾丁最南端)'],
+        'ㄇ':['墾丁(南台灣度假勝地)','貓空(台北茶鄉纜車)'],
+        'ㄈ':['福隆海水浴場(東北角海灘)','奮起湖(阿里山便當名站)'],
+        'ㄉ':['大魯閣(花蓮峽谷國家公園)','東港(屏東漁港小鎮)'],
+        'ㄊ':['太魯閣(花蓮峽谷)','淡水老街(北部河港老街)'],
+        'ㄋ':['南投日月潭(高山湖泊)','內灣老街(新竹客家老街)'],
+        'ㄌ':['六福村(主題樂園)','龍山寺(台北著名廟宇)'],
+        'ㄍ':['九份(金瓜石山城老街)','墾丁國家公園(南端海岸)'],
+        'ㄎ':['墾丁大街(南台灣夜市)','奎壁山(馬祖燕鷗棲地)'],
+        'ㄏ':['花蓮(東台灣美麗海岸)','合歡山(中部高山景點)'],
+        'ㄐ':['九份老街(山城電影聖地)','劍潭(台北青年活動中心)'],
+        'ㄑ':['清境農場(南投高山牧場)','旗津(高雄海峽小島)'],
+        'ㄒ':['西門町(台北潮流聖地)','溪頭(南投森林遊樂區)'],
+        'ㄓ':['中正紀念堂(台北地標)','知本溫泉(台東溫泉)'],
+        'ㄔ':['赤崁樓(台南荷蘭古堡)','澄清湖(高雄大型湖泊)'],
+        'ㄕ':['十分瀑布(新北壯觀瀑布)','石門水庫(桃園水庫景區)'],
+        'ㄖ':['日月潭(南投高山湖)','熱帶海洋公園(花蓮)'],
+        'ㄗ':['阿里山(嘉義高山茶鄉)','左營蓮池潭(高雄龍虎塔)'],
+        'ㄘ':['澄清湖(高雄湖泊)','草嶺古道(北部歷史山道)'],
+        'ㄙ':['太魯閣砂卡礑步道(花蓮)','三峽老街(新北清水祖師廟)'],
+        'ㄧ':['野柳(北海岸奇岩地質)','宜蘭礁溪溫泉(北部溫泉)'],
+        'ㄨ':['烏來溫泉(新北原住民溫泉)','武陵農場(中部高山賞花)'],
+        'ㄩ':['玉山(台灣最高峰)','月世界(台南惡地景觀)']
+      }},
+      '縣市特產': { icon:'🛍️', data:{
+        'ㄅ':['屏東蓮霧(甜脆水果)','彰化爌肉飯(豬肉主食)'],
+        'ㄆ':['苗栗草莓(冬季水果)','屏東黑鮪魚(東港名產)'],
+        'ㄇ':['嘉義梅子(梅山特產)','台南芒果冰(夏日甜品)'],
+        'ㄈ':['台南鳳梨酥(南部風味)','花蓮鳳林薑黃(原民特產)'],
+        'ㄉ':['宜蘭膽肝(鴨賞製品)','彰化豆腐乳(傳統醃製)'],
+        'ㄊ':['台東釋迦(熱帶水果)','桃園蓮花(觀光農業)'],
+        'ㄋ':['南投紅茶(日月潭紅玉)','彰化牛乳(酪農特區)'],
+        'ㄌ':['宜蘭蘭陽米(東北部良米)','嘉義龍眼(乾燥桂圓)'],
+        'ㄍ':['高雄美濃瓜(客家特產)','宜蘭金棗(冬季柑橘)'],
+        'ㄎ':['苗栗客家麻糬(客家甜點)','宜蘭卡啦雞(炸雞名物)'],
+        'ㄏ':['花蓮花生糖(東部甜點)','屏東黑糖(南部特產)'],
+        'ㄐ':['基隆廟口小吃(海港美食)','嘉義雞肉飯(嘉義名菜)'],
+        'ㄑ':['新竹貢丸(客家豬肉丸)','彰化芋頭(大城特產)'],
+        'ㄒ':['西螺醬油(濁水溪特產)','新竹仙草(客家飲品)'],
+        'ㄓ':['彰化豬腳(肉品名產)','台北珍珠奶茶(發源地)'],
+        'ㄔ':['嘉義柳橙汁(新港特產)','澎湖仙人掌果(離島特產)'],
+        'ㄕ':['台東釋迦(佛頭果)','新竹柿餅(秋季零食)'],
+        'ㄖ':['宜蘭肉粽(端午特色)','花蓮榮民麵包(老牌麵包)'],
+        'ㄗ':['彰化豬血糕(米糕類)','台中棗餅(傳統糕點)'],
+        'ㄘ':['台南蔥餅(佳里特產)','嘉義草莓牛奶(飲品)'],
+        'ㄙ':['宜蘭素食麻糬(特色甜點)','台南蒜頭(六甲特產)'],
+        'ㄧ':['宜蘭鴨賞(鴨肉乾)','雲林義竹甘蔗(農業特產)'],
+        'ㄨ':['台南烏魚子(海鮮乾貨)','屏東萬巒豬腳(南部名菜)'],
+        'ㄩ':['玉井芒果(台南名產)','雲林魚丸(海鮮加工)']
+      }},
+      '職業': { icon:'👔', data:{
+        'ㄅ':['保全(保護安全的工作)','幫廚(廚房助手)'],
+        'ㄆ':['廚師(烹飪料理的師傅)','飛行員(駕駛飛機)'],
+        'ㄇ':['美容師(整理髮型與妝容)','模特兒(展示服裝)'],
+        'ㄈ':['服務員(餐廳接待服務)','翻譯(語言轉換工作)'],
+        'ㄉ':['導遊(帶領觀光旅遊)','地政士(土地登記)'],
+        'ㄊ':['體育老師(學校運動教學)','陶藝師(製作陶瓷)'],
+        'ㄋ':['農夫(種植農作物)','奶媽(照顧嬰兒)'],
+        'ㄌ':['律師(法律諮詢辯護)','獵人頭(人才招募)'],
+        'ㄍ':['工程師(設計建造系統)','顧問(提供專業建議)'],
+        'ㄎ':['會計師(財務帳目管理)','空服員(飛機上服務)'],
+        'ㄏ':['護理師(醫院照護病患)','化妝師(妝容設計)'],
+        'ㄐ':['建築師(設計建築物)','記者(採訪報導新聞)'],
+        'ㄑ':['清潔工(環境維護)','廚師(料理師傅)'],
+        'ㄒ':['消防員(滅火救災)','心理師(心理諮商)'],
+        'ㄓ':['植物學家(研究植物)','珠寶設計師(設計首飾)'],
+        'ㄔ':['廚師(烹飪工作)','程式設計師(寫程式)'],
+        'ㄕ':['社工師(社會福利服務)','攝影師(拍照工作)'],
+        'ㄖ':['人力資源(HR職位)','染坊師傅(布料染色)'],
+        'ㄗ':['租屋仲介(房產中介)','造型師(整體造型)'],
+        'ㄘ':['倉管人員(倉庫管理)','裁縫師(服裝製作)'],
+        'ㄙ':['司機(駕駛交通工具)','獸醫(動物醫療)'],
+        'ㄧ':['醫生(診斷治療疾病)','藝術家(創作藝術作品)'],
+        'ㄨ':['舞蹈老師(教學舞蹈)','物理治療師(復健治療)'],
+        'ㄩ':['郵差(遞送信件包裹)','園丁(照顧花木庭園)']
+      }},
+      '手機品牌': { icon:'📱', data:{
+        'ㄅ':['BlackBerry(加拿大鍵盤機)','BENQ(台灣宏碁子品牌)'],
+        'ㄆ':['Palm(早期PDA品牌)','Pixel(Google手機)'],
+        'ㄇ':['魅族(中國手機品牌)','摩托羅拉(美國老品牌)'],
+        'ㄈ':['富可視(Infocus台灣)','飛利浦(荷蘭老品牌)'],
+        'ㄉ':['大同(台灣老品牌)','多普達(HTC前身)'],
+        'ㄊ':['台灣大哥大(電信品牌)','Tecno(非洲市場手機)'],
+        'ㄋ':['Nokia(芬蘭經典品牌)','努比亞(中興子品牌)'],
+        'ㄌ':['LG(韓國品牌)','聯想Lenovo(中國品牌)'],
+        'ㄍ':['Google Pixel(谷歌手機)','國際牌Panasonic(日本)'],
+        'ㄎ':['酷派Coolpad(中國品牌)','卡西歐(日本品牌)'],
+        'ㄏ':['華為Huawei(中國科技)','HTC宏達電(台灣品牌)'],
+        'ㄐ':['金立GIONEE(中國品牌)','捷克Jolla(芬蘭系統)'],
+        'ㄑ':['OPPO(中國廣東品牌)','奇酷360(安全手機)'],
+        'ㄒ':['小米(中國性價比之王)','夏普Sharp(日本品牌)'],
+        'ㄓ':['中興ZTE(中國電信)','Zenfone華碩(台灣品牌)'],
+        'ㄔ':['傳音Tecno(非洲市場)','長虹(中國四川品牌)'],
+        'ㄕ':['三星Samsung(韓國龍頭)','索尼Sony(日本品牌)'],
+        'ㄖ':['日本Sony富士通Sharp','軟銀旗下手機品牌'],
+        'ㄗ':['中興ZTE(電信設備)','Zenfone(華碩系列)'],
+        'ㄘ':['彩星Alcatel(法國品牌)','蒼穹概念機系列'],
+        'ㄙ':['三星(韓國頂級品牌)','索尼Xperia(日本精工)'],
+        'ㄧ':['蘋果iPhone(美國科技之王)','一加OnePlus(旗艦殺手)'],
+        'ㄨ':['vivo(中國廣東品牌)','魅族Meizu(廣東品牌)'],
+        'ㄩ':['宇龍酷派(中國品牌)','YUHO(台灣在地品牌)']
+      }},
+      '飲料品牌': { icon:'🧋', data:{
+        'ㄅ':['百事可樂Pepsi(美國)','波霸奶茶(台灣珍奶始祖)'],
+        'ㄆ':['蘋果西打(台灣汽水)','百事Pepsi可樂(美國)'],
+        'ㄇ':['麥香(台灣茶包飲料)','媽媽茶(古早味茶飲)'],
+        'ㄈ':['福樂牛奶(台灣品牌)','芬達Fanta(橘子汽水)'],
+        'ㄉ':['多多乳酸飲料(台灣)','大苦瓜汁(健康飲品)'],
+        'ㄊ':['台灣啤酒(在地啤酒)','天仁茗茶(台灣茶品牌)'],
+        'ㄋ':['農夫山泉(中國礦泉水)','奶茶品牌系列'],
+        'ㄌ':['立頓Lipton(茶包品牌)','六福皇宮飲品'],
+        'ㄍ':['光泉牛奶(台灣品牌)','貢茶Gong Cha(連鎖)'],
+        'ㄎ':['可口可樂Coca-Cola(美國)','可爾必思(日本乳酸飲料)'],
+        'ㄏ':['黑松沙士(台灣老品牌)','喝茶天(台灣手搖飲)'],
+        'ㄐ':['金車礦泉水(台灣)','爵士咖啡(便利商店)'],
+        'ㄑ':['全家Let\'s Café(咖啡)','巧克力牛奶系列'],
+        'ㄒ':['鮮茶道(台灣手搖飲)','雪碧Sprite(檸檬汽水)'],
+        'ㄓ':['珍珠奶茶(台灣之光)','中埔金桔茶(嘉義特產)'],
+        'ㄔ':['茶裏王(台灣茶飲)','春水堂(珍珠奶茶發源)'],
+        'ㄕ':['舒跑(台灣運動飲料)','雙倍拿鐵(咖啡飲品)'],
+        'ㄖ':['日出茶太(台灣茶飲)','熱美式(便利商店咖啡)'],
+        'ㄗ':['左岸咖啡(台灣品牌)','自然醒果汁品牌'],
+        'ㄘ':['蔗糖特調系列','草本健康茶品牌'],
+        'ㄙ':['沙士(台灣老牌汽水)','思樂冰(7-11冰飲)'],
+        'ㄧ':['一番榨麒麟啤酒(日本)','椰子水品牌系列'],
+        'ㄨ':['烏龍茶伊藤園(日本)','維他露(舒跑母公司)'],
+        'ㄩ':['原萃(可口可樂茶飲)','悅氏礦泉水(台灣)']
+      }},
+      '車牌品牌': { icon:'🚗', data:{
+        'ㄅ':['BMW(德國巴伐利亞汽車)','Bugatti布加迪(法國超跑)'],
+        'ㄆ':['Porsche保時捷(德國跑車)','Peugeot標緻(法國品牌)'],
+        'ㄇ':['Mercedes-Benz賓士(德國)','Mazda馬自達(日本品牌)'],
+        'ㄈ':['Ford福特(美國汽車)','Ferrari法拉利(義大利跑車)'],
+        'ㄉ':['Dodge道奇(美國肌肉車)','大眾Volkswagen(德國)'],
+        'ㄊ':['Toyota豐田(日本第一)','Tesla特斯拉(美國電動車)'],
+        'ㄋ':['Nissan日產(日本品牌)','Neta哪吒(中國電動車)'],
+        'ㄌ':['Lamborghini藍寶堅尼(義大利)','Lexus凌志(豐田豪華)'],
+        'ㄍ':['GMC(美國通用汽車)','廣汽(中國廣州汽車)'],
+        'ㄎ':['KIA起亞(韓國品牌)','Koenigsegg(瑞典超跑)'],
+        'ㄏ':['Honda本田(日本品牌)','Hyundai現代(韓國品牌)'],
+        'ㄐ':['Jeep(美國越野品牌)','吉利(中國品牌)'],
+        'ㄑ':['Chevrolet雪佛蘭(美國)','奇瑞(中國汽車品牌)'],
+        'ㄒ':['Subaru速霸陸(日本)','現代Hyundai(韓國)'],
+        'ㄓ':['中華汽車(台灣品牌)','Zeekr極氪(吉利電動)'],
+        'ㄔ':['Chrysler克萊斯勒(美國)','長城汽車(中國品牌)'],
+        'ㄕ':['Suzuki鈴木(日本品牌)','斯柯達Skoda(捷克)'],
+        'ㄖ':['Rolls-Royce勞斯萊斯(英國)','日產Nissan(日本)'],
+        'ㄗ':['Zeekr極氪(吉利旗下)','自由光(Jeep車款)'],
+        'ㄘ':['Cadillac凱迪拉克(美國)','長安汽車(中國重慶)'],
+        'ㄙ':['Subaru斯巴魯(日本)','Smart(德國微型車)'],
+        'ㄧ':['Isuzu五十鈴(日本卡車)','Infiniti英菲尼迪(日產豪華)'],
+        'ㄨ':['Volvo富豪(瑞典安全)','五菱宏光(中國國民車)'],
+        'ㄩ':['裕隆Yulon(台灣品牌)','宇宙電動概念車系列']
+      }},
+      '運動': { icon:'⚽', data:{
+        'ㄅ':['棒球(台灣國球)','壁球(室內球拍運動)'],
+        'ㄆ':['排球(六人制球類)','跑步(基礎有氧運動)'],
+        'ㄇ':['馬拉松(長距離耐力賽)','木球(槌球類運動)'],
+        'ㄈ':['浮潛(水中探索運動)','飛盤(戶外投擲運動)'],
+        'ㄉ':['跆拳道先修課(武術基礎)','冬季兩項(北歐冬季賽)'],
+        'ㄊ':['跆拳道(韓國武術)','桌球(乒乓球)'],
+        'ㄋ':['攀岩(垂直競技)','女子體操(藝術體操)'],
+        'ㄌ':['籃球(五人制球類)','羽毛球(羽球運動)'],
+        'ㄍ':['高爾夫(草地球桿運動)','滑水(水上拖曳運動)'],
+        'ㄎ':['空手道(日本武術)','橄欖球(英式接觸運動)'],
+        'ㄏ':['滑雪(冬季山地運動)','划船(水上競技)'],
+        'ㄐ':['舉重(力量競技)','劍術(擊劍運動)'],
+        'ㄑ':['騎馬(馬術運動)','曲棍球(冰上草地)'],
+        'ㄒ':['游泳(水中競技)','相撲(日本傳統格鬥)'],
+        'ㄓ':['摔跤(地面格鬥)','自由車(自行車競賽)'],
+        'ㄔ':['衝浪(海浪騎乘運動)','射箭(遠程精準競技)'],
+        'ㄕ':['射擊(精準槍械競技)','沙灘排球(戶外球類)'],
+        'ㄖ':['柔道(日本格鬥技)','熱氣球(空中競技)'],
+        'ㄗ':['足球(世界第一運動)','自行車(單車競賽)'],
+        'ㄘ':['蹴鞠(古代足球)','草地網球(溫布頓)'],
+        'ㄙ':['斯諾克(撞球一種)','速度溜冰(冰上競技)'],
+        'ㄧ':['游泳(水中競技)','瑜伽(身心修練)'],
+        'ㄨ':['武術(中國傳統運動)','網球(球拍運動)'],
+        'ㄩ':['羽球(輕型球拍運動)','跳遠(田徑跳躍項目)']
+      }}
+    };
+
+    const ALL_KEYS = Object.keys(THEMES);
+    let selectedThemes = new Set(ALL_KEYS);
+    let gameSpinning = false;
+    let drawHistory = [], drawSpinning = false;
+
+    /* ════ 頁籤切換 ════ */
+    function switchTab(t) {
+      document.querySelectorAll('.tab-btn').forEach((b, i) =>
+        b.classList.toggle('active', (i === 0 && t === 'draw') || (i === 1 && t === 'game'))
+      );
+      document.getElementById('tab-draw').classList.toggle('active', t === 'draw');
+      document.getElementById('tab-game').classList.toggle('active', t === 'game');
+    }
+
+    /* ════ 注音池渲染 ════ */
+    function renderPool(hls) {
+      document.getElementById('poolGrid').innerHTML = POOL.map(p =>
+        `<div class="pc ${p.k}${hls && hls.includes(p.c) ? ' hl' : ''}" title="${p.t}">${p.c}</div>`
+      ).join('');
+    }
+
+    /* ════ 頁籤一：抽籤 ════ */
+    function pickOne() { return POOL[Math.floor(Math.random() * POOL.length)]; }
+
+    function doDraw() {
+      if (drawSpinning) return;
+      drawSpinning = true;
+      const btn = document.getElementById('drawBtn');
+      const b1 = document.getElementById('dbox1'), b2 = document.getElementById('dbox2');
+      b1.classList.add('spinning'); b2.classList.add('spinning');
+      btn.disabled = true;
+      document.getElementById('dhint').textContent = '抽取中...';
+      renderPool(null);
+
+      let n = 0;
+      const iv = setInterval(() => {
+        const a = pickOne(), b = pickOne();
+        document.getElementById('dchar1').textContent = a.c;
+        document.getElementById('dchar2').textContent = b.c;
+        n++;
+        if (n > 16) {
+          clearInterval(iv);
+          const fa = pickOne(), fb = pickOne();
+          b1.className = 'char-box ' + fa.k + '-box';
+          b2.className = 'char-box ' + fb.k + '-box';
+          document.getElementById('dchar1').textContent = fa.c;
+          document.getElementById('dtag1').textContent = fa.t;
+          document.getElementById('dchar2').textContent = fb.c;
+          document.getElementById('dtag2').textContent = fb.t;
+          void b1.offsetWidth; void b2.offsetWidth;
+          b1.classList.add('pop'); b2.classList.add('pop');
+          setTimeout(() => { b1.classList.remove('pop'); b2.classList.remove('pop'); }, 400);
+          renderPool([fa.c, fb.c]);
+          btn.disabled = false;
+          document.getElementById('dhint').textContent = '點擊按鈕抽取注音字首';
+          drawSpinning = false;
+          drawHistory.unshift(fa.c + ' ' + fb.c);
+          if (drawHistory.length > 8) drawHistory.pop();
+          document.getElementById('drawHistorySection').style.display = '';
+          document.getElementById('drawHistory').innerHTML =
+            drawHistory.map(h => `<div class="hist-chip">${h}</div>`).join('');
+        }
+      }, 55);
+    }
+
+    /* ════ 頁籤二：主題遊戲 ════ */
+    function renderThemeChips() {
+      document.getElementById('themeChips').innerHTML = ALL_KEYS.map(k =>
+        `<button class="theme-chip${selectedThemes.has(k) ? ' on' : ''}" onclick="toggleTheme('${k}')">${THEMES[k].icon} ${k}</button>`
+      ).join('');
+    }
+
+    function toggleTheme(k) {
+      if (selectedThemes.has(k)) {
+        if (selectedThemes.size > 1) selectedThemes.delete(k);
+      } else {
+        selectedThemes.add(k);
+      }
+      renderThemeChips();
+    }
+
+    function doGame() {
+      if (gameSpinning) return;
+      const pool = [...selectedThemes];
+      if (!pool.length) return;
+      gameSpinning = true;
+      document.getElementById('gameBtn').disabled = true;
+      document.getElementById('revealAllBtn').style.display = 'none';
+      document.getElementById('themeDisplay').classList.add('dim');
+      document.getElementById('zhuyinDisplay').classList.add('dim');
+      document.getElementById('examplesGrid').innerHTML = '<div class="empty-state">出題中...</div>';
+
+      let n = 0;
+      const iv = setInterval(() => {
+        const rt = pool[Math.floor(Math.random() * pool.length)];
+        const rp = POOL[Math.floor(Math.random() * POOL.length)];
+        document.getElementById('themeVal').textContent = THEMES[rt].icon + ' ' + rt;
+        document.getElementById('zhuyinVal').textContent = rp.c;
+        document.getElementById('zhuyinTag').textContent = rp.t;
+        n++;
+        if (n > 18) {
+          clearInterval(iv);
+          const theme = pool[Math.floor(Math.random() * pool.length)];
+          const themeData = THEMES[theme].data;
+          const availKeys = Object.keys(themeData);
+          const zKey = availKeys[Math.floor(Math.random() * availKeys.length)];
+          const zInfo = POOL.find(p => p.c === zKey) || { c: zKey, t: '聲母', k: 'sm' };
+
+          document.getElementById('themeVal').textContent = THEMES[theme].icon + ' ' + theme;
+          document.getElementById('zhuyinVal').textContent = zInfo.c;
+          document.getElementById('zhuyinTag').textContent = zInfo.t;
+          document.getElementById('themeDisplay').classList.remove('dim');
+          document.getElementById('zhuyinDisplay').classList.remove('dim');
+
+          const examples = themeData[zKey];
+          document.getElementById('examplesGrid').innerHTML = examples.map((ex, i) => {
+            const m = ex.match(/^(.+?)\((.+)\)$/) || [ex, ex, ''];
+            return `<div class="ex-row">
+              <div class="ex-zhuyin">${zInfo.c}</div>
+              <div class="ex-body">
+                <div class="ex-answer hidden" id="ea${i}" onclick="revealOne(${i})">${m[1]}</div>
+                <div class="ex-hint">${m[2]}</div>
+              </div>
+              <button class="reveal-btn" id="rb${i}" onclick="revealOne(${i})">揭曉</button>
+            </div>`;
+          }).join('');
+
+          document.getElementById('gameBtn').disabled = false;
+          document.getElementById('revealAllBtn').style.display = '';
+          gameSpinning = false;
+        }
+      }, 60);
+    }
+
+    function revealOne(i) {
+      const el = document.getElementById('ea' + i);
+      const rb = document.getElementById('rb' + i);
+      if (el) el.classList.remove('hidden');
+      if (rb) rb.style.display = 'none';
+    }
+
+    function revealAll() {
+      document.querySelectorAll('.ex-answer.hidden').forEach(el => el.classList.remove('hidden'));
+      document.querySelectorAll('.reveal-btn').forEach(b => b.style.display = 'none');
+    }
+
+    /* ════ 初始化 ════ */
+    renderPool(null);
+    renderThemeChips();
+  </script>
+</body>
+</html>
