@@ -481,15 +481,10 @@
           </div>
         </div>
 
-        <div class="examples-label">範例提示（點答案欄揭曉）</div>
-        <div class="examples-list" id="examplesGrid">
-          <div class="empty-state">選好主題後點「出題」開始遊戲</div>
-        </div>
       </div>
 
       <div class="btn-row">
         <button class="btn-primary" id="gameBtn" onclick="doGame()">🎯 出　題</button>
-        <button class="btn-secondary" id="revealAllBtn" onclick="revealAll()" style="display:none">全部揭曉</button>
       </div>
 
     </div>
@@ -943,7 +938,6 @@
       document.getElementById('revealAllBtn').style.display = 'none';
       document.getElementById('themeDisplay').classList.add('dim');
       document.getElementById('zhuyinDisplay').classList.add('dim');
-      document.getElementById('examplesGrid').innerHTML = '<div class="empty-state">出題中...</div>';
 
       let n = 0;
       const iv = setInterval(() => {
@@ -967,36 +961,10 @@
           document.getElementById('themeDisplay').classList.remove('dim');
           document.getElementById('zhuyinDisplay').classList.remove('dim');
 
-          const examples = themeData[zKey];
-          document.getElementById('examplesGrid').innerHTML = examples.map((ex, i) => {
-            const m = ex.match(/^(.+?)\((.+)\)$/) || [ex, ex, ''];
-            return `<div class="ex-row">
-              <div class="ex-zhuyin">${zInfo.c}</div>
-              <div class="ex-body">
-                <div class="ex-answer hidden" id="ea${i}" onclick="revealOne(${i})">${m[1]}</div>
-                <div class="ex-hint">${m[2]}</div>
-              </div>
-              <button class="reveal-btn" id="rb${i}" onclick="revealOne(${i})">揭曉</button>
-            </div>`;
-          }).join('');
-
           document.getElementById('gameBtn').disabled = false;
-          document.getElementById('revealAllBtn').style.display = '';
           gameSpinning = false;
         }
       }, 60);
-    }
-
-    function revealOne(i) {
-      const el = document.getElementById('ea' + i);
-      const rb = document.getElementById('rb' + i);
-      if (el) el.classList.remove('hidden');
-      if (rb) rb.style.display = 'none';
-    }
-
-    function revealAll() {
-      document.querySelectorAll('.ex-answer.hidden').forEach(el => el.classList.remove('hidden'));
-      document.querySelectorAll('.reveal-btn').forEach(b => b.style.display = 'none');
     }
 
     /* ════ 初始化 ════ */
